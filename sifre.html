@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if email %}Şifre Sıfırlama{% else %}Şifremi Unuttum{% endif %} - Yangın Tespit Sistemi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/giris_uyeol.css') }}">
+</head>
+<body>
+<!-- Flash mesajlarını göster -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-messages">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+    <button class="back-btn" onclick="goBack()">← Geri</button>
+
+    <div class="container">
+        <div class="left-panel">
+            <div class="fire-icon">{% if email %}🔄{% else %}🔐{% endif %}</div>
+            <div class="logo">{% if email %}Şifre Sıfırlama{% else %}Şifremi Unuttum{% endif %}</div>
+            <div class="welcome-text">
+                {% if email %}
+                    Yeni Şifre Belirleyin
+                {% else %}
+                    Şifre Sıfırlama
+                {% endif %}
+            </div>
+            <div class="subtitle">
+                {% if email %}
+                    Güvenliğiniz için yeni bir şifre belirleyin.
+                {% else %}
+                    Kayıtlı email adresinizi girin.
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="form-container">
+                <h1 class="form-title">
+                    {% if email %}
+                        Yeni Şifre
+                    {% else %}
+                        Şifremi Unuttum
+                    {% endif %}
+                </h1>
+
+                <p class="form-subtitle">
+                    {% if email %}
+                        {{ email }} için yeni şifrenizi belirleyin
+                    {% else %}
+                        Email adresinizi girin
+                    {% endif %}
+                </p>
+
+                <form id="passwordForm" method="POST">
+                    {% if not email %}
+                    <!-- Şifremi Unuttum Formu -->
+                    <div class="form-group">
+                        <label class="form-label" for="email">E-posta Adresi</label>
+                        <input type="email" id="email" name="email" class="form-input" placeholder="ornek@email.com" required>
+                    </div>
+                    {% else %}
+                    <!-- Şifre Sıfırlama Formu -->
+                    <input type="hidden" name="email" value="{{ email }}">
+                    <div class="form-group">
+                        <label class="form-label" for="new_password">Yeni Şifre</label>
+                        <div class="password-container">
+                            <input type="password" id="new_password" name="new_password" class="form-input" placeholder="Yeni şifrenizi girin" required minlength="6">
+                            <button type="button" class="toggle-password" onclick="togglePassword('new_password')">👁️</button>
+                        </div>
+                        <div class="password-requirements">
+                            <small>Şifre en az 6 karakter olmalı, en az bir harf ve bir sayı içermeli.</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="confirm_password">Şifre Tekrar</label>
+                        <div class="password-container">
+                            <input type="password" id="confirm_password" name="confirm_password" class="form-input" placeholder="Şifrenizi tekrar girin" required>
+                            <button type="button" class="toggle-password" onclick="togglePassword('confirm_password')">👁️</button>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <button type="submit" class="btn btn-primary">
+                        {% if email %}
+                            Şifreyi Sıfırla
+                        {% else %}
+                            Devam Et
+                        {% endif %}
+                    </button>
+
+                    <div class="signup-link">
+                        <a onclick="goToLogin()">Giriş sayfasına dön</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/sifre.js') }}"></script>
+</body>
+</html>

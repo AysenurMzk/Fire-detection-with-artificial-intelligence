@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Üye Ol - Yangın Tespit Sistemi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/giris_uyeol.css') }}">
+</head>
+<body>
+<!-- Flash mesajlarını göster -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-messages">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+    <button class="back-btn" onclick="goBack()">← Geri</button>
+
+    <div class="container">
+        <div class="left-panel">
+            <div class="fire-icon">🔥</div>
+            <div class="logo">Yangın Tespit</div>
+            <div class="welcome-text">Aramıza Hoş Geldiniz</div>
+            <div class="subtitle">
+                Yangın tespit sistemimize üye olarak tüm özelliklerden faydalanabilir, yangın istatistiklerinizi takip edebilirsiniz.
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="form-container">
+                <h1 class="form-title">Üye Ol</h1>
+                <p class="form-subtitle">Hesap oluşturmak için bilgilerinizi girin</p>
+
+                <form id="signupForm" method="POST">
+                    <div class="form-group">
+                        <label class="form-label" for="name">Ad</label>
+                        <input type="text" id="name" name="name" class="form-input" placeholder="Adınız" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="surname">Soyad</label>
+                        <input type="text" id="surname" name="surname" class="form-input" placeholder="Soyadınız" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="signupEmail">E-posta Adresi</label>
+                        <input type="email" id="signupEmail" name="signupEmail" class="form-input" placeholder="ornek@email.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="signupPassword">Şifre</label>
+                        <div class="password-container">
+                            <input type="password" id="signupPassword" name="signupPassword" class="form-input" placeholder="Şifrenizi oluşturun" required minlength="6">
+                            <button type="button" class="toggle-password" onclick="toggleSignupPassword()">👁️</button>
+                        </div>
+                        <div class="password-requirements">
+                            <small>Şifre en az 6 karakter olmalı, en az bir harf ve bir sayı içermeli, 4'ten fazla ardışık/aynı karakter içeremez.</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="confirmPassword">Şifre Tekrar</label>
+                        <div class="password-container">
+                            <input type="password" id="confirmPassword" name="confirmPassword" class="form-input" placeholder="Şifrenizi tekrar girin" required>
+                            <button type="button" class="toggle-password" onclick="toggleConfirmPassword()">👁️</button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Üye Ol</button>
+
+                    <div class="signup-link">
+                        Zaten üye misin? <a onclick="goToLogin()">Giriş yap</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/uyeol.js') }}"></script>
+    <script>
+        // Şifre kontrolleri için ek JavaScript
+        function sifreKontrolEt(sifre) {
+            // En az bir harf kontrolü
+            if (!/[a-zA-Z]/.test(sifre)) {
+                return "Şifre en az bir harf içermelidir!";
+            }
+
+            // En az bir sayı kontrolü
+            if (!/\d/.test(sifre)) {
+                return "Şifre en az bir sayı içermelidir!";
+            }
+
+            // Ardışık sayı kontrolü (4 veya daha fazla)
+            for (let i = 0; i <= 6; i++) {
+                const consecutive = i.toString() + (i+1).toString() + (i+2).toString() + (i+3).toString();
+                if (sifre.includes(consecutive)) {
+                    return "Şifre 4 veya daha fazla ardışık sayı içeremez! (örn: 1234)";
+                }
+            }
+
+            // Aynı karakter kontrolü (4 veya daha fazla)
+            for (let i = 0; i < sifre.length - 3; i++) {
+                if (sifre[i] === sifre[i+1] && sifre[i] === sifre[i+2] && sifre[i] === sifre[i+3]) {
+                    return "Şifre 4 veya daha fazla aynı karakter içeremez! (örn: aaaa)";
+                }
+            }
+
+            return "";
+        }
+
+        // Form gönderim kontrolü
+        document.getElementById('signupForm').addEventListener('submit', function(e) {
+            const sifre = document.getElementById('signupPassword').value;
+            const confirmSifre = document.getElementById('confirmPassword').value;
+
+            // Temel kontroller
+            if (sifre.length < 6) {
+                e.preventDefault();
+                alert('Şifre en az 6 karakter olmalıdır!');
+                return;
+            }
+
+            if (sifre !== confirmSifre) {
+                e.preventDefault();
+                alert('Şifreler eşleşmiyor!');
+                return;
+            }
+
+            // Gelişmiş şifre kontrolleri
+            const hata = sifreKontrolEt(sifre);
+            if (hata) {
+                e.preventDefault();
+                alert(hata);
+            }
+        });
+
+        // Şifre input'unda anlık kontrol (isteğe bağlı)
+        document.getElementById('signupPassword').addEventListener('input', function(e) {
+            const sifre = e.target.value;
+            if (sifre.length >= 4) {
+                const hata = sifreKontrolEt(sifre);
+                const hataElement = document.getElementById('sifreHata');
+
+                if (hata) {
+                    if (!hataElement) {
+                        const hataDiv = document.createElement('div');
+                        hataDiv.id = 'sifreHata';
+                        hataDiv.style.color = 'red';
+                        hataDiv.style.fontSize = '12px';
+                        hataDiv.style.marginTop = '5px';
+                        this.parentNode.appendChild(hataDiv);
+                    }
+                    document.getElementById('sifreHata').textContent = hata;
+                } else if (hataElement) {
+                    hataElement.remove();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yangın Tespit Sistemi</title>
+    <!-- Leaflet CSS (Harita için) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Mevcut CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tespit.css') }}">
+</head>
+<body>
+    <!-- Hızlı Konum Butonu (Sabit) -->
+    <button class="location-btn" onclick="showLastLocation()" title="Son Konumu Göster">
+        📍
+    </button>
+
+    <!-- Konum Seçim Modalı -->
+    <div id="locationModal" class="location-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📍 YANGIN KONUMU SEÇİNİZ</h2>
+                <p>Lütfen yangının olduğu veya şüphelendiğiniz konumu haritadan seçin</p>
+            </div>
+
+            <div class="location-info">
+                <div class="coord-display">
+                    <div class="coord-item">
+                        <strong>🌐 ENLEM (Latitude)</strong>
+                        <span id="selectedLatDisplay">39.9334</span>
+                    </div>
+                    <div class="coord-item">
+                        <strong>🌐 BOYLAM (Longitude)</strong>
+                        <span id="selectedLonDisplay">32.8597</span>
+                    </div>
+                </div>
+                <div class="coord-item">
+                    <strong>🏠 YAKIN ADRES</strong>
+                    <span id="addressDisplay">Konum yükleniyor...</span>
+                </div>
+
+                <div id="currentLocationBadge" class="current-location-badge" style="display: none;">
+                    📍 Şu anki konumunuz kullanılıyor
+                </div>
+            </div>
+
+            <div class="map-container-wrapper">
+                <div id="mapLoading" class="map-loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Harita yükleniyor...</p>
+                </div>
+                <div id="mapContainer" class="map-container"></div>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-secondary" onclick="useCurrentLocation()">
+                    <span>📍</span> Şu Anki Konumumu Kullan
+                </button>
+                <button class="modal-btn modal-btn-primary" onclick="confirmLocation()" id="confirmBtn">
+                    <span>✅</span> Konumu Onayla ve Devam Et
+                </button>
+                <button class="modal-btn modal-btn-danger" onclick="closeLocationModal()">
+                    <span>✖</span> İptal
+                </button>
+            </div>
+
+            <div style="margin-top: 20px; text-align: center; color: #a0a0c0; font-size: 14px;">
+                <p>💡 <strong>İpucu:</strong> İşaretçiyi sürükleyin veya haritaya tıklayarak konumu değiştirin</p>
+                <p>📍 Konum doğruluğu, yangın müdahale ekiplerinin hızlı ulaşımı için hayati önem taşır</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gizli Konum Input'ları -->
+    <div class="hidden-inputs">
+        <input type="hidden" id="selectedLat" name="latitude">
+        <input type="hidden" id="selectedLon" name="longitude">
+        <input type="hidden" id="selectedAddress" name="address">
+        <!-- Kullanıcı ID'si için gizli input -->
+        <input type="hidden" id="userId" value="{{ session.get('kullanici_id', '') }}">
+        <input type="hidden" id="userName" value="{{ session.get('kullanici_adi', 'misafir') }}">
+    </div>
+
+    <!-- MEVCUT ARAYÜZ -->
+    <button class="back-btn" onclick="goBack()">← Geri</button>
+
+    <div class="user-info">
+        {% if session.kullanici_adi %}
+            <span class="welcome-text">Hoş geldiniz, {{ session.kullanici_adi }}</span>
+            <a href="{{ url_for('cikis') }}" class="logout-link" onclick="clearUserLocation()">Çıkış Yap</a>
+        {% else %}
+            <a href="{{ url_for('girisyap') }}" class="login-link">Giriş Yap</a>
+        {% endif %}
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🔥 Görsel Yangın Analizi</h1>
+            <p>Önce konum seçin, sonra fotoğraf yükleyin</p>
+            <p class="location-hint" id="locationHint" style="color: #e74c3c; font-weight: bold; margin-top: 10px;">
+                ⚠️ ÖNEMLİ: Analiz için önce konum seçmelisiniz!
+            </p>
+        </div>
+
+        <audio id="alarmSound" class="alarm-sound" loop>
+            <source src="https://assets.mixkit.co/active_storage/sfx/257/257-preview.mp3" type="audio/mpeg">
+        </audio>
+
+        <div class="upload-section">
+            <h2>📁 Fotoğraf Yükle</h2>
+            <p>Konum seçtikten sonra yangın fotoğrafı yükleyin</p>
+
+            <label for="fileInput" class="file-upload" id="fileUpload" style="background-color: white;">
+                <div class="upload-icon">📸</div>
+                <h3>Fotoğraf yüklemek için tıklayın</h3>
+                <p>Önce konum, sonra fotoğraf seçmelisiniz</p>
+            </label>
+            <input type="file" id="fileInput" accept=".png,.jpg,.jpeg" style="display: none;">
+
+            <div class="selected-location" id="selectedLocationDisplay" style="display: none;">
+                <h4>📍 Seçilen Konum:</h4>
+                <p id="currentLocationDisplay">Konum seçilmedi</p>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Fotoğraf analiz ediliyor...</p>
+            </div>
+        </div>
+
+        <div class="result-section" id="resultSection">
+            <h2>📊 Analiz Sonuçları</h2>
+
+            <div class="image-comparison">
+                <div class="image-container">
+                    <h3>Yüklenen Fotoğraf</h3>
+                    <img id="originalImage" src="" alt="Orijinal">
+                </div>
+            </div>
+
+            <div class="analysis-result" id="analysisResult">
+                <!-- Sonuç burada gösterilecek -->
+            </div>
+
+            <div class="analysis-details">
+                <h3>🔍 Detaylı Analiz</h3>
+                <div class="detail-item">
+                    <span>📍 Konum:</span>
+                    <span id="locationResult">-</span>
+                </div>
+                <div class="detail-item">
+                    <span>Alev Tespiti:</span>
+                    <span id="flameDetection">-</span>
+                </div>
+                <div class="detail-item">
+                    <span>Duman Yoğunluğu:</span>
+                    <span id="smokeDensity">-</span>
+                </div>
+                <div class="detail-item">
+                    <span>Isı Seviyesi:</span>
+                    <span id="heatLevel">-</span>
+                </div>
+                <div class="detail-item">
+                    <span>Yangın Risk Puanı:</span>
+                    <span id="riskScore">-</span>
+                </div>
+                <div class="detail-item">
+                    <span>Önerilen Müdahale:</span>
+                    <span id="recommendedAction">-</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="analyzeNewImage()">Yeni Analiz</button>
+            <button class="btn btn-danger" onclick="stopAlarm()">Alarmı Durdur</button>
+            <button class="btn btn-success" onclick="downloadReport()">Rapor İndir</button>
+            <button class="btn btn-warning" onclick="openLocationModal()">Konumu Değiştir</button>
+        </div>
+    </div>
+
+    <!-- Leaflet JS (Harita için) -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Mevcut JS -->
+    <script src="{{ url_for('static', filename='js/tespit.js') }}"></script>
+</body>
+</html>

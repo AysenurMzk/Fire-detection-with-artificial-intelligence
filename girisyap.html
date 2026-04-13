@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giriş Yap - Yangın Tespit Sistemi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/giris_uyeol.css') }}">
+</head>
+<body>
+<!-- Flash mesajlarını göster -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-messages">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+    <button class="back-btn" onclick="goBack()">← Geri</button>
+
+    <div class="container">
+        <div class="left-panel">
+            <div class="fire-icon">🔥</div>
+            <div class="logo">Yangın Tespit</div>
+            <div class="welcome-text">Güvenliğiniz Bizim İçin Önemli</div>
+            <div class="subtitle">
+                Yangın tespit sistemimize hoş geldiniz. Hesaabınıza giriş yaparak yangın tespit özelliklerine ve istatistiklerine erişebilirsiniz.
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="form-container">
+                <h1 class="form-title">Giriş Yap</h1>
+                <p class="form-subtitle">Hesabınıza erişmek için giriş yapın</p>
+
+                <form id="loginForm" method="POST">
+                    <div class="form-group">
+                        <label class="form-label" for="email">E-posta Adresi</label>
+                        <input type="email" id="email" name="email" class="form-input" placeholder="ornek@email.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="password">Şifre</label>
+                        <div class="password-container">
+                            <input type="password" id="password" name="password" class="form-input" placeholder="Şifrenizi girin" required>
+                            <button type="button" class="toggle-password" onclick="togglePassword()">👁️</button>
+                        </div>
+                    </div>
+
+                    <div class="forgot-password">
+    <a href="{{ url_for('sifre') }}">Şifremi Unuttum</a>
+</div>
+
+                    <button type="submit" class="btn btn-primary">Giriş Yap</button>
+
+                    <div class="signup-link">
+                        Üye değil misin? <a onclick="goToSignUp()">Üye ol</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/girisyap.js') }}"></script>
+</body>
+</html>

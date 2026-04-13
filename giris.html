@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Siteme Hoş Geldiniz</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/giris.css') }}">
+</head>
+<body>
+    <!-- Arka plan resimleri için container -->
+    <div id="arkaplan-container">
+        {% for resim in resimler %}
+        <div class="arkaplan-resim" style="background-image: url('{{ url_for('serve_resimler', filename=resim) }}');"></div>
+        {% endfor %}
+    </div>
+
+    <!-- İçerik -->
+    <div class="icerik">
+        <div class="icerik-konteyner">
+            <h1 class="baslik">Yangın Tespit Sistemi</h1>
+
+            <div class="tanitim-yazisi">
+                <p>Erken yangın tespiti, can ve mal kaybını önlemenin en etkili yolu.
+                    Modern sensör teknolojileri sayesinde yangın henüz başlangıç aşamasındayken tespit edilebiliyor.</p>
+            </div>
+        </div>
+
+        <div class="buton-grubu">
+            <button class="giris-butonu" onclick="girisTiklandi()">Giriş</button>
+
+            <div class="uye-ol-madan">
+                <div class="uye-ol-madan">
+    <a href="{{ url_for('misafir_giris') }}">Üye olmadan devam et</a>
+</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/giris.js') }}"></script>
+    <script>
+        function yanginTespitTiklandi() {
+            window.location.href = "/tespit";
+        }
+
+
+
+        function girisTiklandi() {
+            window.location.href = "/girisyap";
+        }
+    </script>
+</body>
+</html>

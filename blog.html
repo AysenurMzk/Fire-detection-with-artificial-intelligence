@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yangın Haberleri</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/blog.css') }}">
+</head>
+<body>
+    <!-- Flash mesajlarını göster -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <header class="header">
+        <h1>Yangın Haberleri</h1>
+        <p>Son dakika yangın haberleri</p>
+        <div class="user-info">
+            {% if session.kullanici_adi %}
+                <span class="welcome-text">Hoş geldiniz, {{ session.kullanici_adi }}</span>
+                <a href="{{ url_for('cikis') }}" class="logout-link">Çıkış Yap</a>
+            {% else %}
+                <a href="{{ url_for('girisyap') }}" class="login-link">Giriş Yap</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <div class="container">
+        {% if haberler and haberler|length > 0 %}
+        <div class="blog-posts">
+            {% for haber in haberler %}
+            <article class="blog-post">
+                <h2>{{ loop.index }}. Haber</h2>
+                <div class="haber-icerik">
+                    <h3 class="haber-baslik">{{ haber.baslik }}</h3>
+                    <div class="haber-detay">
+                        <p><strong>Kaynak:</strong> {{ haber.kaynak }}</p>
+                    </div>
+                    {% if haber.link and haber.link != "None" %}
+                    <a href="{{ haber.link }}" target="_blank" class="haber-link">Haberi Oku</a>
+                    {% endif %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="haber-yok">
+            <h3>Şu anda haber bulunamadı</h3>
+            <p>Haberler yükleniyor veya güncel yangın haberi bulunmuyor.</p>
+            <button onclick="window.location.reload()">Yenile</button>
+        </div>
+        {% endif %}
+
+        <div class="button-container">
+            <a href="{{ url_for('giris') }}" class="back-button">Ana Sayfaya Dön</a>
+            <a href="{{ url_for('tespit_sayfasi') }}" class="back-button yangin-tespit-btn">Yangın Tespiti</a>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/blog.js') }}"></script>
+</body>
+</html>
